@@ -19,9 +19,9 @@ class reactionquick():
         self.inteval_sec_out = args.inteval_sec_out
         if not os.path.exists(self._from):
             raise Exception('there are no word lists')
-        '''if os.path.exists(self._to):
-            raise Exception('the path has existed, please change path or delete the file')
-        os.makedirs(self._to)'''
+        if not os.path.exists(self._to):
+            os.makedirs(self._to)
+
         if not os.path.exists(self._store):
             os.makedirs(self._store)
 
@@ -112,7 +112,7 @@ class reactionquick():
         # split and combine mp3
         # split wordlist in number
         count = 0
-        for start in tqdm(range(0, len(wordlist), self._number),desc='combining lists'):
+        for start in tqdm(range(0, len(wordlist), self._number), desc='combining lists'):
             count += 1
             end = min(start + self._number, len(wordlist))
             sound = self.combine_mp3(wordlist[start:end])
@@ -122,7 +122,7 @@ class reactionquick():
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('--type', choices=['E', 'A'], default='E', help='English accent or American accent')
-    argparser.add_argument('--split', choices=['random', 'order'], default='order',
+    argparser.add_argument('--split', choices=['random', 'order'], default='random',
                            help='how to split the word lists and generate dictate lists')
     argparser.add_argument('--number', default=50, type=int, help='how many words dictated at onetime')
     argparser.add_argument('--frompath', default='list')
