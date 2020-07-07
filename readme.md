@@ -53,4 +53,4 @@ python reaction_quick.py --type E
 [1]https://github.com/zwm0426/combine-word-listening
 blank文件与实例单词来自这个库
 
-[2]下载音频来源与有道词典的API
+[2]下载音频来源于有道词典的API
