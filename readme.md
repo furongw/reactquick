@@ -25,7 +25,7 @@ sh start.sh
 
 type：可选'E'或'A'表示英音和美音
 
-split：可选'random'和'order'表示打乱顺序和按照顺序
+split：可选'random'和'order'表示打乱顺序和按照顺序;'list'表示可以按照list分割
 
 number:一个测试音频的单词或词组数
 
