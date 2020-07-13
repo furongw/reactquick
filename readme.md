@@ -16,7 +16,7 @@ urllib
 
 将你需要听写的单词的excel文件放入list文件夹中，且单词放在第一列，运行reaction_quick.py即可，生成的测试听写音频在dictate
 ```shell script
-python reaction_quick.py
+sh start.sh
 ```
 
 - 修改设置
@@ -45,8 +45,18 @@ interval_sec_out: 词组间读音的间隔，单位：s
 python reaction_quick.py --type E
 ```
 
+---
+7月13日更新
+
+增加从按list分割音频文件功能。你需要在excel文件中标注list号，格式如example.xlsx
+
+使用示例：
+
+```shell script
+python reaction_quick.py --frompath example.xlsx --topath dictate
+```
+
 ## 未完持续
-- 未加入按照原划分的list生成音频的功能
 - 没有增加从txt，json等文件中获取单词的功能
 - 没有进行测试：包括错误单词，没有单词读音等问题
 - 很多其他功能如gui和单词提醒等

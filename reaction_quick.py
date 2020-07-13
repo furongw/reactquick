@@ -5,6 +5,7 @@ import pandas as pd
 from pydub import AudioSegment
 import random
 from tqdm import tqdm
+import numpy as np
 
 
 class reactionquick():
@@ -27,16 +28,22 @@ class reactionquick():
 
     def get_words(self):
         # 判断是否是文件夹或文件
-        if os.path.isdir(self._from):
-            wordlist = []
-            for filename in tqdm(os.listdir(self._from), desc='geting words'):
-                path = os.path.join(self._from, filename)
-                wl = self.get_words_in_file(path)
-                wordlist.extend(wl)
+        if self._split != 'list':
+            if os.path.isdir(self._from):
+                wordlist = []
+                for filename in tqdm(os.listdir(self._from), desc='geting words'):
+                    path = os.path.join(self._from, filename)
+                    wl = self.get_words_in_file(path)
+                    wordlist.extend(wl)
+            else:
+                wordlist = self.get_words_in_file(self._from)
+            return wordlist
         else:
-            wordlist = self.get_words_in_file(self._from)
-
-        return wordlist
+            filename, filetype = os.path.splitext(self._from)
+            if not filetype in ['.csv', '.xlsx', '.xls'] or os.path.isdir(self._from):
+                raise TypeError('cannot read this kind of file')
+            worddict = self.get_words_in_file(self._from)
+            return worddict
 
     def get_words_in_file(self, path):
         filename, filetype = os.path.splitext(path)
@@ -47,8 +54,17 @@ class reactionquick():
                 data = pd.read_excel(path, header=None)
         else:
             raise Exception('not readable files')
-
-        return data.iloc[:, 0].to_list()
+        if self._split != 'list':
+            return data.iloc[:, 0].to_list()
+        else:
+            datadict = {}
+            for words in data.iloc[:, 0].to_list():
+                if words.startswith('list'):
+                    listnum = words
+                    datadict[words] = []
+                else:
+                    datadict[listnum].append(words)
+        return datadict
 
     def combine_mp3(self, wordlist):
         # 词组内和词组间的间隔
@@ -95,6 +111,11 @@ class reactionquick():
             request.urlretrieve(url, filename=filepath)
 
     def generate_from_list(self):
+        """
+        top level
+        order: get words -> download words -> split and combine mp3
+        :return:
+        """
         print('please make sure you put words in first column and no header')
         wordlist = self.get_words()
 
@@ -102,34 +123,47 @@ class reactionquick():
             random.shuffle(wordlist)
 
         # download mp3s
-        for words in tqdm(wordlist, desc='downloading sources'):
-            words = words.strip().split(' ')
-            # 词组
-            for word in words:
-                word = word.lower()
-                self.get_word_mp3(word)
+        if self._split != 'list':
+            for words in tqdm(wordlist, desc='downloading sources'):
+                words = words.strip().split(' ')
+                # 词组
+                for word in words:
+                    word = word.lower()
+                    self.get_word_mp3(word)
+        else:
+            for listnum, wordslist in tqdm(wordlist.items(), desc='downloading sources'):
+                for words in wordslist:
+                    words = words.strip().split(' ')
+                    # 词组
+                    for word in words:
+                        word = word.lower()
+                        self.get_word_mp3(word)
 
         # split and combine mp3
         # split wordlist in number
-        count = 0
-        for start in tqdm(range(0, len(wordlist), self._number), desc='combining lists'):
-            count += 1
-            end = min(start + self._number, len(wordlist))
-            sound = self.combine_mp3(wordlist[start:end])
-            sound.export(os.path.join(self._to, 'list{}.mp3'.format(str(count))), format='mp3')
-
+        if self._split != 'list':
+            count = 0
+            for start in tqdm(range(0, len(wordlist), self._number), desc='combining lists'):
+                count += 1
+                end = min(start + self._number, len(wordlist))
+                sound = self.combine_mp3(wordlist[start:end])
+                sound.export(os.path.join(self._to, 'list{}.mp3'.format(str(count))), format='mp3')
+        else:
+            for listnum, words in tqdm(wordlist.items(), desc='combining lists'):
+                sound = self.combine_mp3(words)
+                sound.export(os.path.join(self._to, '{}.mp3'.format(str(listnum))), format='mp3')
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('--type', choices=['E', 'A'], default='E', help='English accent or American accent')
-    argparser.add_argument('--split', choices=['random', 'order'], default='random',
+    argparser.add_argument('--split', choices=['random', 'order', 'list'], default='list',
                            help='how to split the word lists and generate dictate lists')
     argparser.add_argument('--number', default=50, type=int, help='how many words dictated at onetime')
-    argparser.add_argument('--frompath', default='list')
-    argparser.add_argument('--topath', default='dictate')
+    argparser.add_argument('--frompath', default='4level.xlsx')
+    argparser.add_argument('--topath', default='dictate_4')
     argparser.add_argument('--store', default='store', help='where to store all the mp3')
     argparser.add_argument('--inteval_sec_in', default=0.01, type=float, help='interval in words')
-    argparser.add_argument('--inteval_sec_out', default=3, type=float, help='interval among words')
+    argparser.add_argument('--inteval_sec_out', default=1, type=float, help='interval among words')
     args = argparser.parse_args()
     a = reactionquick(args)
     a.generate_from_list()
