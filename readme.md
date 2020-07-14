@@ -11,6 +11,18 @@ pydub
 tqdm
 urllib
 
+---
+7月13日更新
+
+增加从按list分割音频文件功能。你需要在excel文件中标注list号，格式如example.xlsx
+
+使用示例：
+
+```shell script
+python reaction_quick.py --frompath example.xlsx --topath dictate
+```
+
+---
 ## 使用
 - 使用默认设置
 
@@ -43,16 +55,6 @@ interval: 单词或词组间读音的间隔，单位：s
 python reaction_quick.py --type E
 ```
 
----
-7月13日更新
-
-增加从按list分割音频文件功能。你需要在excel文件中标注list号，格式如example.xlsx
-
-使用示例：
-
-```shell script
-python reaction_quick.py --frompath example.xlsx --topath dictate
-```
 
 ## 未完持续
 - 没有增加从txt，json等文件中获取单词的功能
