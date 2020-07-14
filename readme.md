@@ -35,9 +35,7 @@ topath： 测试音频存放的文件夹
 
 store： 存放每个单词读音的文件夹
 
-interval_sec_in: 词组内读音的间隔，单位：s
-
-interval_sec_out: 词组间读音的间隔，单位：s
+interval: 单词或词组间读音的间隔，单位：s
 
 你可以用命令行修改这些参数：
 如修改为英音：
@@ -63,6 +61,6 @@ python reaction_quick.py --frompath example.xlsx --topath dictate
 
 ## references
 [1]https://github.com/zwm0426/combine-word-listening
-blank文件与实例单词来自这个库
+blank文件与示例单词来自这个库
 
 [2]下载音频来源于有道词典的API

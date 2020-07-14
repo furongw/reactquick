@@ -16,8 +16,7 @@ class reactionquick():
         self._to = args.topath
         self._number = args.number
         self._store = args.store
-        self.inteval_sec_in = args.inteval_sec_in
-        self.inteval_sec_out = args.inteval_sec_out
+        self.interval = args.interval
         if not os.path.exists(self._from):
             raise Exception('there are no word lists')
         if not os.path.exists(self._to):
@@ -69,33 +68,27 @@ class reactionquick():
     def combine_mp3(self, wordlist):
         # 词组内和词组间的间隔
         blank = AudioSegment.from_mp3('blank.mp3')
-        interval_in = blank[:self.inteval_sec_in * 1000]
-        interval_out = blank[:self.inteval_sec_out * 1000]
+        interval = blank[:self.interval * 1000]
         all = blank[:  1000]
         for words in wordlist:
-            words = words.strip().split()
-            for word in words:
-                word = word.lower()
-                filename = word + '.mp3'
-                add = AudioSegment.from_mp3(os.path.join(self._store, filename))
-                # all modify to -21db
-                db1 = -21
-                db2 = add.dBFS
-                dbplus = db1 - db2
-                if dbplus < 0:
-                    add -= abs(dbplus)
-                else:
-                    add += abs(dbplus)
-                # 词组内只间隔0.1s
-                all = all + add + interval_in
+            words = words.lower()
+            filename = words + '.mp3'
+            add = AudioSegment.from_mp3(os.path.join(self._store, filename))
+            db1 = -21
+            db2 = add.dBFS
+            dbplus = db1 - db2
+            if dbplus < 0:
+                add -= abs(dbplus)
+            else:
+                add += abs(dbplus)
             # 词组间间隔3s
-            all += interval_out
+            all += (add+ interval)
         return all
 
     def get_word_mp3(self, word):
         """
         get mp3 of the word and download into store
-        :param word:
+        :param (str) word: lower word or words
         :return:
         """
         word = word.lower()
@@ -107,6 +100,9 @@ class reactionquick():
                 voicetype = '1'
             elif self._type == 'A':
                 voicetype = '0'
+            length = len(word.split(' '))
+            if length >1:
+                word = word.replace(' ', '%20')
             url = r'http://dict.youdao.com/dictvoice?type=' + voicetype + r'&audio=' + word
             request.urlretrieve(url, filename=filepath)
 
@@ -126,18 +122,12 @@ class reactionquick():
         if self._split != 'list':
             for words in tqdm(wordlist, desc='downloading sources'):
                 words = words.strip().split(' ')
-                # 词组
-                for word in words:
-                    word = word.lower()
-                    self.get_word_mp3(word)
+                self.get_word_mp3(words)
         else:
-            for listnum, wordslist in tqdm(wordlist.items(), desc='downloading sources'):
-                for words in wordslist:
-                    words = words.strip().split(' ')
-                    # 词组
-                    for word in words:
-                        word = word.lower()
-                        self.get_word_mp3(word)
+            for listnum, wordslist in tqdm(wordlist.items(), desc='downloading from list'):
+                for words in tqdm(wordslist,desc='downloading sources'):
+                    words = words.lower()
+                    self.get_word_mp3(words)
 
         # split and combine mp3
         # split wordlist in number
@@ -159,11 +149,10 @@ if __name__ == '__main__':
     argparser.add_argument('--split', choices=['random', 'order', 'list'], default='list',
                            help='how to split the word lists and generate dictate lists')
     argparser.add_argument('--number', default=50, type=int, help='how many words dictated at onetime')
-    argparser.add_argument('--frompath', default='4level.xlsx')
-    argparser.add_argument('--topath', default='dictate_4')
+    argparser.add_argument('--frompath', default='example.xlsx')
+    argparser.add_argument('--topath', default='dictate')
     argparser.add_argument('--store', default='store', help='where to store all the mp3')
-    argparser.add_argument('--inteval_sec_in', default=0.01, type=float, help='interval in words')
-    argparser.add_argument('--inteval_sec_out', default=1, type=float, help='interval among words')
+    argparser.add_argument('--interval', default=1, type=float, help='interval among words')
     args = argparser.parse_args()
     a = reactionquick(args)
     a.generate_from_list()
